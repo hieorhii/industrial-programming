@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.Formatter;
 
 public class Main {
     public static void main(String[] args) {
@@ -12,11 +13,22 @@ public class Main {
         System.out.print("Enter k: ");
         int k = in.nextInt();
 
-        for (; element >= Math.pow(10,-k);) {
+        Formatter fmt = new Formatter();
+
+        for (; Math.abs(element) >= Math.pow(10, -k);) {
             sum += element;
-            element = element*x/divisor++;
+            element = element * x / divisor++;
         }
-        System.out.println("\ne^x = " + sum);
-        System.out.println("Standart 3e^x = " + Math.exp(x));
+
+        fmt.format("Octal (x): %#o\n", x);
+        fmt.format("Hexadecimal (x): %#x\n", x);
+
+        fmt.format("e^x : %f", sum);
+
+        fmt.format("\nStandard exp(x): %f", Math.exp(x));
+
+        System.out.println(fmt);
+
+        fmt.close();
     }
 }
