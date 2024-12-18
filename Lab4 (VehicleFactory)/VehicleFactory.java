@@ -50,12 +50,7 @@ public class VehicleFactory {
         String txtFilename = "vehicles.txt";
         String xmlFilename = "vehicles.xml";
         String jsonFilename = "vehicles.json";
-
-        Set<Vehicle> vehicleSet = new HashSet<>();
-        vehicleSet.addAll(FileManager.readFromTxt(txtFilename));
-        vehicleSet.addAll(FileManager.readFromXML(xmlFilename));
-        vehicleSet.addAll(FileManager.readFromJSON(jsonFilename));
-        vehicleCollection.getAllVehicles().addAll(vehicleSet);
+        String excelFilename = "vehicles.xlsx";
 
         while (true) {
             System.out.println("1. Добавить автомобиль");
@@ -101,10 +96,69 @@ public class VehicleFactory {
                     sortVehiclesByCapacity();
                     break;
                 case 10:
-                    saveToFile(txtFilename, xmlFilename, jsonFilename);
+                    System.out.println("1. Сохранить в txt");
+                    System.out.println("2. Сохранить в xml");
+                    System.out.println("3. Сохранить в json");
+                    System.out.println("3. Сохранить в xlsx");
+                    int choice2 = scanner.nextInt();
+                    List<Vehicle> vehicles = vehicleCollection.getAllVehicles();
+                    switch (choice2) {
+                        case 1:
+                            FileManager.writeToTxt(txtFilename, vehicles);
+                            System.out.println("Данные успешно сохранены в файл.");
+                            break;
+                        case 2:
+                            FileManager.writeToXML(xmlFilename, vehicles);
+                            System.out.println("Данные успешно сохранены в файл.");
+                            break;
+                        case 3:
+                            FileManager.writeToJSON(jsonFilename, vehicles);
+                            System.out.println("Данные успешно сохранены в файл.");
+                            break;
+                        case 4:
+                            FileManager.writeToExcel(excelFilename, vehicles);
+                            System.out.println("Данные успешно сохранены в файл.");
+                            break;
+                        default:
+                            System.out.println("Неверный ввод");
+                            break;
+                    }
                     break;
                 case 11:
-                    readFromFile(txtFilename, xmlFilename, jsonFilename);
+                    System.out.println("1. Прочитать из txt");
+                    System.out.println("2. Прочитать из xml");
+                    System.out.println("3. Прочитать из json");
+                    System.out.println("3. Прочитать из xlsx");
+                    int choice3 = scanner.nextInt();
+                    switch (choice3) {
+                        case 1:
+                            vehicleCollection.getAllVehicles().clear();
+                            vehicleCollection.getAllVehicles().addAll(FileManager.readFromTxt(txtFilename));
+                            System.out.println("Данные успешно прочитаны из файла.");
+                            printAllVehicles();
+                            break;
+                        case 2:
+                            vehicleCollection.getAllVehicles().clear();
+                            vehicleCollection.getAllVehicles().addAll(FileManager.readFromXML(xmlFilename));
+                            System.out.println("Данные успешно прочитаны из файла.");
+                            printAllVehicles();
+                            break;
+                        case 3:
+                            vehicleCollection.getAllVehicles().clear();
+                            vehicleCollection.getAllVehicles().addAll(FileManager.readFromJSON(jsonFilename));
+                            System.out.println("Данные успешно прочитаны из файла.");
+                            printAllVehicles();
+                            break;
+                        case 4:
+                            vehicleCollection.getAllVehicles().clear();
+                            vehicleCollection.getAllVehicles().addAll(FileManager.readFromExcel(excelFilename));
+                            System.out.println("Данные успешно прочитаны из файла.");
+                            printAllVehicles();
+                            break;
+                        default:
+                            System.out.println("Неверный ввод");
+                            break;
+                    }
                     break;
                 case 12:
                     System.out.println("Выход из программы.");
@@ -118,62 +172,37 @@ public class VehicleFactory {
 
     private static void addVehicle(Scanner scanner) {
         System.out.println("Введите id автомобиля:");
-        while (!scanner.hasNextInt()) {
-            System.out.println("Ошибка: id должен быть целым числом. Попробуйте ещё раз:");
-            scanner.next(); // Очистка неверного ввода
-        }
         int id = scanner.nextInt();
-        if (id <= 0) {
-            System.out.println("Ошибка: id должен быть положительным числом.");
-            return;
-        }
-
         System.out.println("Введите модель автомобиля:");
         String type = scanner.next();
-        if (type.isEmpty()) {
-            System.out.println("Ошибка: модель автомобиля не может быть пустой.");
-            return;
-        }
-
         System.out.println("Введите вместимость:");
-        while (!scanner.hasNextInt()) {
-            System.out.println("Ошибка: вместимость должна быть целым числом. Попробуйте ещё раз:");
-            scanner.next(); // Очистка неверного ввода
-        }
         int capacity = scanner.nextInt();
-        if (capacity <= 0) {
-            System.out.println("Ошибка: вместимость должна быть положительным числом.");
-            return;
-        }
-
         System.out.println("Введите скорость:");
-        while (!scanner.hasNextInt()) {
-            System.out.println("Ошибка: скорость должна быть целым числом. Попробуйте ещё раз:");
-            scanner.next(); // Очистка неверного ввода
-        }
         int speed = scanner.nextInt();
-        if (speed <= 0) {
-            System.out.println("Ошибка: скорость должна быть положительным числом.");
-            return;
-        }
-
         System.out.println("Введите цену:");
-        while (!scanner.hasNextDouble()) {
-            System.out.println("Ошибка: цена должна быть числом. Попробуйте ещё раз:");
-            scanner.next(); // Очистка неверного ввода
-        }
         double price = scanner.nextDouble();
-        if (price < 0) {
-            System.out.println("Ошибка: цена не может быть отрицательной.");
-            return;
+
+        Vehicle newVehicle = new ConcreteVehicle(id, type, capacity, speed, price);
+
+        System.out.println("Добавить страховку? (y/n)");
+        String addInsurance = scanner.next();
+        if (addInsurance.equalsIgnoreCase("y")) {
+            System.out.println("Введите стоимость страховки:");
+            double insuranceCost = scanner.nextDouble();
+            newVehicle = new InsuranceDecorator(newVehicle, insuranceCost);
         }
 
-        // Если все данные введены корректно, создаем объект
-        Vehicle newVehicle = new ConcreteVehicle(id, type, capacity, speed, price);
-        vehicleCollection.addVehicle(newVehicle);
-        System.out.println("Автомобиль успешно добавлен.");
-    }
+        System.out.println("Добавить расширенную гарантию? (y/n)");
+        String addWarranty = scanner.next();
+        if (addWarranty.equalsIgnoreCase("y")) {
+            System.out.println("Введите стоимость гарантии:");
+            double warrantyCost = scanner.nextDouble();
+            newVehicle = new WarrantyDecorator(newVehicle, warrantyCost);
+        }
 
+        vehicleCollection.addVehicle(newVehicle);
+        System.out.println("Автомобиль успешно добавлен: " + newVehicle);
+    }
 
 
     private static void removeVehicle(Scanner scanner) {
@@ -216,6 +245,7 @@ public class VehicleFactory {
             }
         }
     }
+
     private static void printAllVehicles2() {
         List<Vehicle> vehicles = vehicleCollection2.getAllVehicles();
         if (vehicles.isEmpty()) {
@@ -255,26 +285,5 @@ public class VehicleFactory {
 
     private static void saveDataAndCreateZip() {
         FileManager.saveDataWithEncryptionAndZip(vehicleCollection.getAllVehicles());
-    }
-
-    // Сохранение данных в файлы
-    private static void saveToFile(String txtFilename, String xmlFilename, String jsonFilename) {
-        List<Vehicle> vehicles = vehicleCollection.getAllVehicles();
-        FileManager.writeToTxt(txtFilename, vehicles);
-        FileManager.writeToXML(xmlFilename, vehicles);
-        FileManager.writeToJSON(jsonFilename, vehicles);
-        System.out.println("Данные успешно сохранены в файлы.");
-    }
-
-    // Чтение данных из файлов
-    private static void readFromFile(String txtFilename, String xmlFilename, String jsonFilename) {
-        Set<Vehicle> vehicleSet = new HashSet<>();
-        vehicleSet.addAll(FileManager.readFromTxt(txtFilename));
-        vehicleSet.addAll(FileManager.readFromXML(xmlFilename));
-        vehicleSet.addAll(FileManager.readFromJSON(jsonFilename));
-        vehicleCollection.getAllVehicles().clear();
-        vehicleCollection.getAllVehicles().addAll(vehicleSet);
-        System.out.println("Данные успешно прочитаны из файлов.");
-        printAllVehicles();
     }
 }

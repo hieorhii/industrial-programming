@@ -24,6 +24,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.vehicles.utils.ConcreteVehicle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -189,7 +192,7 @@ public class FileManager {
 
         if (secretKey == null) {
             System.out.println("Ошибка: secretKey не может быть null.");
-            return vehicles; // Возврат пустого списка
+            return vehicles;
         }
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
@@ -258,5 +261,55 @@ public class FileManager {
         } catch (IOException e) {
 
         }
+    }
+    public static List<Vehicle> readFromExcel(String filePath) {
+        List<Vehicle> vehicles = new ArrayList<>();
+        ExcelConnection excelConnection = ExcelConnection.getInstance(filePath);
+        Workbook workbook = excelConnection.getWorkbook();
+
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (Row row : sheet) {
+            try {
+                if (row.getRowNum() == 0) continue;
+
+                int id = (int) row.getCell(0).getNumericCellValue();
+                String type = row.getCell(1).getStringCellValue();
+                int capacity = (int) row.getCell(2).getNumericCellValue();
+                int speed = (int) row.getCell(3).getNumericCellValue();
+                double price = row.getCell(4).getNumericCellValue();
+
+                vehicles.add(new ConcreteVehicle(id, type, capacity, speed, price));
+            } catch (Exception e) {
+                System.err.println("Ошибка чтения строки " + row.getRowNum() + ": " + e.getMessage());
+            }
+        }
+        return vehicles;
+    }
+
+    public static void writeToExcel(String filePath, List<Vehicle> vehicles) {
+        ExcelConnection excelConnection = ExcelConnection.getInstance(filePath);
+        Workbook workbook = excelConnection.getWorkbook();
+        Sheet sheet = workbook.createSheet("Vehicles");
+
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("ID");
+        header.createCell(1).setCellValue("Type");
+        header.createCell(2).setCellValue("Capacity");
+        header.createCell(3).setCellValue("Speed");
+        header.createCell(4).setCellValue("Price");
+
+        int rowIndex = 1;
+        for (Vehicle vehicle : vehicles) {
+            Row row = sheet.createRow(rowIndex++);
+            row.createCell(0).setCellValue(vehicle.getId());
+            row.createCell(1).setCellValue(vehicle.getType());
+            row.createCell(2).setCellValue(vehicle.getCapacity());
+            row.createCell(3).setCellValue(vehicle.getSpeed());
+            row.createCell(4).setCellValue(vehicle.getPrice());
+        }
+
+        excelConnection.save(filePath);
+        System.out.println("Данные успешно записаны в Excel файл.");
     }
 }
