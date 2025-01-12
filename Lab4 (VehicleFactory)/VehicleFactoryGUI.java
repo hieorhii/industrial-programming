@@ -18,7 +18,6 @@ public class VehicleFactoryGUI extends Application {
     private static SecretKey key;
 
     public static void main(String[] args) {
-        // Загрузка ключа перед запуском GUI
         try {
             key = VehicleFactory.loadKeyFromFile();
         } catch (IOException e) {
@@ -30,7 +29,6 @@ public class VehicleFactoryGUI extends Application {
             }
         }
 
-        // Запуск JavaFX
         launch(args);
     }
 
@@ -38,14 +36,25 @@ public class VehicleFactoryGUI extends Application {
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Vehicle Factory");
 
-        // Основной макет
         BorderPane root = new BorderPane();
 
-        // Список автомобилей
         ListView<String> vehicleListView = new ListView<>();
         updateVehicleList(vehicleListView);
 
-        // Кнопки управления
+        vehicleListView.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    setStyle("-fx-font-family: 'Arial'; -fx-font-size: 14px; -fx-padding: 5;");
+                }
+            }
+        });
+
         Button addButton = new Button("Добавить");
         Button removeButton = new Button("Удалить");
         Button saveButton = new Button("Сохранить");
@@ -55,20 +64,24 @@ public class VehicleFactoryGUI extends Application {
         buttonBox.setPadding(new Insets(10));
         buttonBox.setStyle("-fx-background-color: #f4f4f4;");
 
-        // Добавление элементов на экран
         root.setCenter(vehicleListView);
         root.setBottom(buttonBox);
 
-        // Обработчики событий
         addButton.setOnAction(e -> showAddVehicleDialog(vehicleListView));
         removeButton.setOnAction(e -> {
             String selectedVehicle = vehicleListView.getSelectionModel().getSelectedItem();
             if (selectedVehicle != null) {
-                int id = Integer.parseInt(selectedVehicle.split(":")[0].trim());
-                vehicleCollection.removeVehicle(id);
-                updateVehicleList(vehicleListView);
+                String[] parts = selectedVehicle.split("\\|")[0].split(":");
+                try {
+                    int id = Integer.parseInt(parts[1].trim());
+                    vehicleCollection.removeVehicle(id);
+                    updateVehicleList(vehicleListView);
+                } catch (NumberFormatException ex) {
+                    showAlert(Alert.AlertType.ERROR, "Ошибка", "Не удалось извлечь ID для удаления.");
+                }
             }
         });
+
         saveButton.setOnAction(e -> {
             FileManager.writeEncryptedToTxt("encrypted.txt", vehicleCollection.getAllVehicles(), key);
             showAlert(Alert.AlertType.INFORMATION, "Сохранение", "Данные успешно зашифрованы и сохранены.");
@@ -81,7 +94,6 @@ public class VehicleFactoryGUI extends Application {
             showAlert(Alert.AlertType.INFORMATION, "Загрузка", "Данные успешно расшифрованы и загружены.");
         });
 
-        // Настройка сцены и показ окна
         Scene scene = new Scene(root, 600, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -90,16 +102,22 @@ public class VehicleFactoryGUI extends Application {
     private void updateVehicleList(ListView<String> vehicleListView) {
         vehicleListView.getItems().clear();
         for (Vehicle vehicle : vehicleCollection.getAllVehicles()) {
-            vehicleListView.getItems().add(vehicle.getId() + ": " + vehicle.getType() + " - $" + vehicle.getPrice());
+            String formattedVehicle = String.format(
+                    "ID: %d | Модель: %s | Вместимость: %d | Скорость: %d км/ч | Цена: $%.2f",
+                    vehicle.getId(),
+                    vehicle.getType(),
+                    vehicle.getCapacity(),
+                    vehicle.getSpeed(),
+                    vehicle.getPrice()
+            );
+            vehicleListView.getItems().add(formattedVehicle);
         }
     }
 
     private void showAddVehicleDialog(ListView<String> vehicleListView) {
-        // Создание диалога для добавления автомобиля
         Dialog<Vehicle> dialog = new Dialog<>();
         dialog.setTitle("Добавить автомобиль");
 
-        // Поля ввода
         TextField idField = new TextField();
         TextField typeField = new TextField();
         TextField capacityField = new TextField();

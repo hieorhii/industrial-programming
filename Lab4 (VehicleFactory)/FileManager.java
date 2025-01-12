@@ -8,13 +8,11 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,7 +35,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
+
 public class FileManager {
+    public static double evaluateExpression(String expression) {
+        try {
+            Expression e = new ExpressionBuilder(expression).build();
+            return e.evaluate();
+        } catch (Exception ex) {
+            System.err.println("Ошибка при вычислении выражения: " + expression);
+            ex.printStackTrace();
+            return Double.NaN;
+        }
+    }
 
     public static List<Vehicle> readFromTxt(String filename) {
         List<Vehicle> vehicles = new ArrayList<>();
@@ -45,11 +56,11 @@ public class FileManager {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                int id = Integer.parseInt(parts[0].trim());
+                int id = (int) evaluateExpression(parts[0].trim());
                 String type = parts[1].trim();
-                int capacity = Integer.parseInt(parts[2].trim());
-                int speed = Integer.parseInt(parts[3].trim());
-                double price = Double.parseDouble(parts[4].trim());
+                int capacity = (int) evaluateExpression(parts[2].trim());
+                int speed = (int) evaluateExpression(parts[3].trim());
+                double price = evaluateExpression(parts[4].trim());
                 vehicles.add(new ConcreteVehicle(id, type, capacity, speed, price));
             }
         } catch (IOException e) {
@@ -85,11 +96,11 @@ public class FileManager {
                 if (node.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) node;
 
-                    int id = Integer.parseInt(element.getElementsByTagName("id").item(0).getTextContent());
+                    int id = (int) evaluateExpression(element.getElementsByTagName("id").item(0).getTextContent());
                     String type = element.getElementsByTagName("type").item(0).getTextContent();
-                    int capacity = Integer.parseInt(element.getElementsByTagName("capacity").item(0).getTextContent());
-                    int speed = Integer.parseInt(element.getElementsByTagName("speed").item(0).getTextContent());
-                    double price = Double.parseDouble(element.getElementsByTagName("price").item(0).getTextContent());
+                    int capacity = (int) evaluateExpression(element.getElementsByTagName("capacity").item(0).getTextContent());
+                    int speed = (int) evaluateExpression(element.getElementsByTagName("speed").item(0).getTextContent());
+                    double price = evaluateExpression(element.getElementsByTagName("price").item(0).getTextContent());
 
                     vehicles.add(new ConcreteVehicle(id, type, capacity, speed, price));
                 }
@@ -152,14 +163,20 @@ public class FileManager {
         List<Vehicle> vehicles = new ArrayList<>();
         try (FileReader reader = new FileReader(filename)) {
             Gson gson = new Gson();
-            Type vehicleListType = new TypeToken<ArrayList<ConcreteVehicle>>() {}.getType();
-            vehicles = gson.fromJson(reader, vehicleListType);
+            List<ConcreteVehicle> parsedVehicles = gson.fromJson(reader, new TypeToken<List<ConcreteVehicle>>() {}.getType());
+            for (ConcreteVehicle vehicle : parsedVehicles) {
+                vehicle.setId((int) evaluateExpression(String.valueOf(vehicle.getId())));
+                vehicle.setCapacity((int) evaluateExpression(String.valueOf(vehicle.getCapacity())));
+                vehicle.setSpeed((int) evaluateExpression(String.valueOf(vehicle.getSpeed())));
+                vehicle.setPrice(evaluateExpression(String.valueOf(vehicle.getPrice())));
+                vehicles.add(vehicle);
+            }
         } catch (Exception e) {
+            e.printStackTrace();
         }
         return vehicles;
     }
 
-    // Запись в JSON файл
     public static void writeToJSON(String filename, List<Vehicle> vehicles) {
         try (FileWriter writer = new FileWriter(filename)) {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -205,7 +222,7 @@ public class FileManager {
 
             if (encryptedData.length() == 0) {
                 System.out.println("Файл пуст: " + filename);
-                return vehicles; // Возврат пустого списка
+                return vehicles;
             }
 
             String decryptedData = EncryptionUtils.decrypt(encryptedData.toString(), secretKey);
@@ -273,11 +290,11 @@ public class FileManager {
             try {
                 if (row.getRowNum() == 0) continue;
 
-                int id = (int) row.getCell(0).getNumericCellValue();
+                int id = (int) evaluateExpression(String.valueOf(row.getCell(0).getNumericCellValue()));
                 String type = row.getCell(1).getStringCellValue();
-                int capacity = (int) row.getCell(2).getNumericCellValue();
-                int speed = (int) row.getCell(3).getNumericCellValue();
-                double price = row.getCell(4).getNumericCellValue();
+                int capacity = (int) evaluateExpression(String.valueOf(row.getCell(2).getNumericCellValue()));
+                int speed = (int) evaluateExpression(String.valueOf(row.getCell(3).getNumericCellValue()));
+                double price = evaluateExpression(String.valueOf(row.getCell(4).getNumericCellValue()));
 
                 vehicles.add(new ConcreteVehicle(id, type, capacity, speed, price));
             } catch (Exception e) {
