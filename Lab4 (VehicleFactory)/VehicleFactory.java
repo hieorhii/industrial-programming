@@ -19,7 +19,6 @@ public class VehicleFactory {
     private static final String ALGORITHM = "AES";
     private static final String KEY_FILE = "secretKey.key";
     private static VehicleCollection vehicleCollection = new VehicleList();
-    private static VehicleCollection vehicleCollection2 = new VehicleList();
     static SecretKey key;
 
     public static void saveKeyToFile(SecretKey secretKey) throws IOException {
@@ -99,7 +98,7 @@ public class VehicleFactory {
                     System.out.println("1. Сохранить в txt");
                     System.out.println("2. Сохранить в xml");
                     System.out.println("3. Сохранить в json");
-                    System.out.println("3. Сохранить в xlsx");
+                    System.out.println("4. Сохранить в xlsx");
                     int choice2 = scanner.nextInt();
                     List<Vehicle> vehicles = vehicleCollection.getAllVehicles();
                     switch (choice2) {
@@ -171,22 +170,22 @@ public class VehicleFactory {
     }
 
     private static void addVehicle(Scanner scanner) {
-        System.out.println("Введите id автомобиля (можно использовать арифметическое выражение):");
+        System.out.println("Введите id автомобиля:");
         String idExpression = scanner.next();
         int id = (int) evaluateExpression(idExpression);
 
         System.out.println("Введите модель автомобиля:");
         String type = scanner.next();
 
-        System.out.println("Введите вместимость (можно использовать арифметическое выражение):");
+        System.out.println("Введите вместимость:");
         String capacityExpression = scanner.next();
         int capacity = (int) evaluateExpression(capacityExpression);
 
-        System.out.println("Введите скорость (можно использовать арифметическое выражение):");
+        System.out.println("Введите скорость:");
         String speedExpression = scanner.next();
         int speed = (int) evaluateExpression(speedExpression);
 
-        System.out.println("Введите цену (можно использовать арифметическое выражение):");
+        System.out.println("Введите цену:");
         String priceExpression = scanner.next();
         double price = evaluateExpression(priceExpression);
 
@@ -195,7 +194,7 @@ public class VehicleFactory {
         System.out.println("Добавить страховку? (y/n)");
         String addInsurance = scanner.next();
         if (addInsurance.equalsIgnoreCase("y")) {
-            System.out.println("Введите стоимость страховки (можно использовать арифметическое выражение):");
+            System.out.println("Введите стоимость страховки:");
             String insuranceCostExpression = scanner.next();
             double insuranceCost = evaluateExpression(insuranceCostExpression);
             newVehicle = new InsuranceDecorator(newVehicle, insuranceCost);
@@ -204,7 +203,7 @@ public class VehicleFactory {
         System.out.println("Добавить расширенную гарантию? (y/n)");
         String addWarranty = scanner.next();
         if (addWarranty.equalsIgnoreCase("y")) {
-            System.out.println("Введите стоимость гарантии (можно использовать арифметическое выражение):");
+            System.out.println("Введите стоимость гарантии:");
             String warrantyCostExpression = scanner.next();
             double warrantyCost = evaluateExpression(warrantyCostExpression);
             newVehicle = new WarrantyDecorator(newVehicle, warrantyCost);
@@ -231,15 +230,15 @@ public class VehicleFactory {
             System.out.println("Введите новую модель автомобиля:");
             String type = scanner.next();
 
-            System.out.println("Введите вместимость автомобиля (можно использовать арифметическое выражение):");
+            System.out.println("Введите вместимость автомобиля:");
             String capacityExpression = scanner.next();
             int capacity = (int) evaluateExpression(capacityExpression);
 
-            System.out.println("Введите скорость (можно использовать арифметическое выражение):");
+            System.out.println("Введите скорость:");
             String speedExpression = scanner.next();
             int speed = (int) evaluateExpression(speedExpression);
 
-            System.out.println("Введите новую цену (можно использовать арифметическое выражение):");
+            System.out.println("Введите новую цену:");
             String priceExpression = scanner.next();
             double price = evaluateExpression(priceExpression);
 
@@ -256,17 +255,6 @@ public class VehicleFactory {
 
     private static void printAllVehicles() {
         List<Vehicle> vehicles = vehicleCollection.getAllVehicles();
-        if (vehicles.isEmpty()) {
-            System.out.println("Автомобили отсутствуют.");
-        } else {
-            for (Vehicle vehicle : vehicles) {
-                System.out.println(vehicle);
-            }
-        }
-    }
-
-    private static void printAllVehicles2() {
-        List<Vehicle> vehicles = vehicleCollection2.getAllVehicles();
         if (vehicles.isEmpty()) {
             System.out.println("Автомобили отсутствуют.");
         } else {
@@ -297,9 +285,8 @@ public class VehicleFactory {
 
     private static void readAndDecryptData() {
         List<Vehicle> decryptedVehicles = FileManager.readDecryptedFromTxt("encrypted.txt", key);
-        System.out.println("Дешифрованные данные:");
-        vehicleCollection2.getAllVehicles().addAll(decryptedVehicles);
-        printAllVehicles2();
+        vehicleCollection.getAllVehicles().addAll(decryptedVehicles);
+        printAllVehicles();
     }
 
     private static void saveDataAndCreateZip() {
